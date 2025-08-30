@@ -1,0 +1,65 @@
+# Long-Tail Analysis Agent Configuration
+# This file contains the default configuration for the long-tail analysis system
+
+# MCP Server Configuration
+mcp_url: "http://localhost:3000"
+mcp_timeout: 30
+
+# Database Configuration  
+db_path: "data/profiles.db"
+vector_db_path: "data/chroma"
+cache_ttl_hours: 24
+
+# Analysis Configuration
+window_hours: 6
+overlap_hours: 1
+max_entities_per_window: 50
+anomaly_threshold: 2.0
+
+# LLM Configuration
+local_llm:
+  provider: "ollama"
+  model: "mixtral:8x7b"
+  temperature: 0.7
+  max_tokens: 4096
+
+api_llm:
+  use_api: true
+  providers:
+    claude:
+      api_key: "${CLAUDE_API_KEY}"
+      model: "claude-3-opus-20240229"
+      max_requests_per_minute: 10
+    openai:
+      api_key: "${OPENAI_API_KEY}"
+      model: "gpt-4-turbo-preview"
+      embedding_model: "text-embedding-3-large"
+
+# Memory Configuration
+memory:
+  max_working_memory_mb: 1024
+  profile_cache_size: 1000
+  embedding_dimensions: 1536
+
+# Enrichment Configuration
+enrichment:
+  enable_web_research: true
+  enable_threat_intelligence: true
+  cache_ttl_hours: 24
+  rate_limit_requests_per_minute: 60
+
+# Monitoring
+logging:
+  level: "INFO"
+  file: "logs/analyzer.log"
+  
+metrics:
+  export_interval_seconds: 60
+  prometheus_port: 9090
+
+# Performance Tuning
+performance:
+  max_concurrent_requests: 10
+  request_timeout_seconds: 30
+  retry_attempts: 3
+  retry_delay_seconds: 1
