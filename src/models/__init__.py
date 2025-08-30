@@ -6,7 +6,7 @@ This module defines the core data structures:
 - Pattern: Attack pattern representations
 """
 
-from .profile import AttackerProfile
-from .pattern import Pattern
+from src.models.pattern import Pattern
+from src.models.profile import AttackerProfile
 
 __all__ = ["AttackerProfile", "Pattern"]

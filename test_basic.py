@@ -12,11 +12,11 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from utils.mcp_client import EnhancedMCPClient
-from models.profile import AttackerProfile
-from agents.profile_manager import ProfileManager
-from agents.pattern_analyzer import PatternAnalyzer
-from utils.config import ConfigManager
+from src.utils.mcp_client import EnhancedMCPClient
+from src.models.profile import AttackerProfile
+from src.agents.profile_manager import ProfileManager
+from src.agents.pattern_analyzer import PatternAnalyzer
+from src.utils.config import ConfigManager
 
 
 async def test_mcp_client():

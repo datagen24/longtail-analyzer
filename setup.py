@@ -37,10 +37,44 @@ def check_python_version():
     return True
 
 
+def check_uv_environment():
+    """Check if UV virtual environment is set up."""
+    print("Checking UV environment...")
+    
+    venv_path = Path(".venv")
+    if venv_path.exists():
+        print("  ✓ UV virtual environment (.venv) exists")
+        
+        # Check if we're in the virtual environment
+        if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
+            print("  ✓ Virtual environment is activated")
+        else:
+            print("  ⚠  Virtual environment exists but not activated")
+            print("    Activate with: source .venv/bin/activate")
+            return False
+        return True
+    else:
+        print("  ⚠  UV virtual environment (.venv) not found")
+        print("    Create with: uv venv --python 3.11")
+        return False
+
+
 def install_dependencies():
-    """Install Python dependencies."""
+    """Install Python dependencies using UV."""
     print("Installing Python dependencies...")
-    return run_command("pip install -r requirements.txt", "Installing requirements")
+    
+    # Check if UV is available
+    try:
+        result = subprocess.run("uv --version", shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            print(f"  ✓ UV is available: {result.stdout.strip()}")
+            return run_command("uv pip install -e .", "Installing with UV")
+        else:
+            print("  ⚠  UV not available, falling back to pip")
+            return run_command("pip install -r requirements.txt", "Installing requirements with pip")
+    except:
+        print("  ⚠  UV not available, falling back to pip")
+        return run_command("pip install -r requirements.txt", "Installing requirements with pip")
 
 
 def create_directories():
@@ -137,7 +171,7 @@ def check_mcp_server():
 def run_basic_test():
     """Run basic functionality test."""
     print("Running basic tests...")
-    return run_command("python test_basic.py", "Basic functionality test")
+    return run_command("python test_simple.py", "Basic functionality test")
 
 
 def main():
@@ -149,6 +183,10 @@ def main():
     
     # Check Python version
     if not check_python_version():
+        success = False
+    
+    # Check UV environment
+    if not check_uv_environment():
         success = False
     
     # Create directories

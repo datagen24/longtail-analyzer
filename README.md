@@ -59,10 +59,21 @@ The Long-Tail Analysis Agent is designed to address the critical limitations in 
 ### Prerequisites
 
 - Python 3.11+
+- UV (recommended for fast dependency management)
 - macOS (M4 Max optimized)
 - 64GB RAM (32GB allocated to system)
 - Ollama (for local LLM support)
 - DShield MCP Server running on localhost:3000
+
+### Why UV?
+
+This project uses [UV](https://github.com/astral-sh/uv) for dependency management because:
+
+- **Speed**: 10-100x faster than pip for dependency resolution and installation
+- **Reliability**: Better dependency resolution with lockfile support
+- **Modern Python**: Built for modern Python packaging standards
+- **Compatibility**: Works with existing pip workflows and requirements.txt
+- **MCP Support**: Better support for newer Python features used by MCP modules
 
 ### Setup
 
@@ -72,21 +83,47 @@ The Long-Tail Analysis Agent is designed to address the critical limitations in 
    cd longtail-analyzer
    ```
 
-2. **Install dependencies**:
+2. **Set up UV virtual environment** (Recommended):
+   ```bash
+   # Install UV if not already installed
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   
+   # Create and activate virtual environment
+   ./activate.sh
+   ```
+   
+   Or manually:
+   ```bash
+   # Create virtual environment with Python 3.11+
+   uv venv --python 3.11
+   
+   # Activate virtual environment
+   source .venv/bin/activate
+   
+   # Install dependencies
+   uv pip install -e ".[dev,test,docs]"
+   ```
+
+3. **Alternative: Traditional pip setup**:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure environment**:
+4. **Configure environment**:
    ```bash
-   cp .env.example .env
+   cp env.example .env
    # Edit .env with your API keys and configuration
    ```
 
-4. **Initialize databases**:
+5. **Initialize databases**:
    ```bash
    mkdir -p data logs
    # The system will create SQLite databases on first run
+   ```
+
+6. **Run setup verification**:
+   ```bash
+   python setup.py
    ```
 
 ## Configuration
@@ -245,20 +282,48 @@ longtail-analyzer/
 ### Running Tests
 
 ```bash
+# With UV (recommended)
+uv run pytest tests/ -v
+
+# Or with activated environment
+source .venv/bin/activate
 pytest tests/ -v
 ```
 
 ### Code Quality
 
 ```bash
-# Format code
+# With UV (recommended)
+uv run black src/ tests/
+uv run ruff check src/ tests/
+uv run mypy src/
+
+# Or with activated environment
+source .venv/bin/activate
 black src/ tests/
-
-# Lint code
-flake8 src/ tests/
-
-# Type checking
+ruff check src/ tests/
 mypy src/
+```
+
+### Development Commands
+
+```bash
+# Activate environment
+source .venv/bin/activate
+
+# Install in development mode
+uv pip install -e ".[dev,test,docs]"
+
+# Run the application (multiple ways)
+python main.py --help                    # Direct execution
+uv run python main.py --help             # UV run
+uv run python -m src --help              # Module execution
+
+# Generate documentation
+uv run pdoc --html src/ --output-dir docs/api
+
+# Run all quality checks
+uv run pre-commit run --all-files
 ```
 
 ## Contributing

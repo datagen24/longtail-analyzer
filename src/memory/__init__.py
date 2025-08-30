@@ -7,8 +7,8 @@ This module provides:
 - Cache manager for working memory
 """
 
-from .vector_store import VectorStore
-from .state_store import StateStore
-from .cache_manager import CacheManager
+from src.memory.cache_manager import CacheManager
+from src.memory.state_store import StateStore
+from src.memory.vector_store import VectorStore
 
 __all__ = ["VectorStore", "StateStore", "CacheManager"]

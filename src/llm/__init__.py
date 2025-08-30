@@ -6,7 +6,7 @@ This module provides:
 - API-based LLM integration (Claude, OpenAI)
 """
 
-from .local_llm import OllamaLLM
-from .api_llm import ClaudeAPI, OpenAIAPI
+from src.llm.api_llm import ClaudeAPI, OpenAIAPI
+from src.llm.local_llm import OllamaLLM
 
 __all__ = ["OllamaLLM", "ClaudeAPI", "OpenAIAPI"]

@@ -8,15 +8,15 @@ This module contains specialized agents for:
 - Intelligence enrichment
 """
 
-from .data_processor import TimeWindowProcessor
-from .pattern_analyzer import PatternAnalyzer
-from .profile_manager import ProfileManager, AttackerProfile
-from .enrichment_agent import EnrichmentAgent
+from src.agents.data_processor import TimeWindowProcessor
+from src.agents.enrichment_agent import EnrichmentAgent
+from src.agents.pattern_analyzer import PatternAnalyzer
+from src.agents.profile_manager import AttackerProfile, ProfileManager
 
 __all__ = [
     "TimeWindowProcessor",
-    "PatternAnalyzer", 
+    "PatternAnalyzer",
     "ProfileManager",
     "AttackerProfile",
-    "EnrichmentAgent"
+    "EnrichmentAgent",
 ]

@@ -14,8 +14,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from orchestrator import LongTailAnalyzer
-from utils.config import ConfigManager
+from src.orchestrator import LongTailAnalyzer
+from src.utils.config import ConfigManager
 
 
 def setup_logging(log_level: str = "INFO", log_file: str = "logs/analyzer.log"):
