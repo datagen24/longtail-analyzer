@@ -5,10 +5,11 @@ This module provides integration with external LLM APIs including
 Claude and OpenAI for advanced analysis capabilities.
 """
 
-import logging
-from typing import Dict, List, Optional, Any
-import httpx
 import json
+import logging
+from typing import Any
+
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -16,21 +17,21 @@ logger = logging.getLogger(__name__)
 class ClaudeAPI:
     """
     Claude API integration for advanced analysis.
-    
+
     This class provides integration with Anthropic's Claude API for
     complex analysis tasks that require advanced reasoning capabilities.
     """
-    
+
     def __init__(
         self,
         api_key: str,
         model: str = "claude-3-opus-20240229",
         base_url: str = "https://api.anthropic.com",
-        max_tokens: int = 4096
+        max_tokens: int = 4096,
     ):
         """
         Initialize the Claude API client.
-        
+
         Args:
             api_key: Anthropic API key
             model: Claude model to use
@@ -39,62 +40,65 @@ class ClaudeAPI:
         """
         self.api_key = api_key
         self.model = model
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.max_tokens = max_tokens
         self.session = httpx.AsyncClient(timeout=120.0)
-        
+
         logger.info(f"ClaudeAPI initialized with model: {model}")
-    
+
     async def __aenter__(self):
         """Async context manager entry."""
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         await self.close()
-    
+
     async def close(self):
         """Close the HTTP session."""
         await self.session.aclose()
-    
-    async def analyze_events(self, events: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+    async def analyze_events(self, events: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Analyze security events using Claude.
-        
+
         Args:
             events: List of security events to analyze
-            
+
         Returns:
             Analysis results
         """
         if not events:
             return {"threat_score": 0.0, "analysis": "No events to analyze"}
-        
+
         # Prepare prompt for analysis
         prompt = self._create_analysis_prompt(events)
-        
+
         try:
             # Call Claude API
             response = await self._call_claude(prompt)
-            
+
             if response:
                 # Parse the response
                 analysis = self._parse_analysis_response(response)
                 return analysis
             else:
-                return {"threat_score": 0.0, "analysis": "Failed to get Claude response"}
-                
+                return {
+                    "threat_score": 0.0,
+                    "analysis": "Failed to get Claude response",
+                }
+
         except Exception as e:
             logger.error(f"Error analyzing events with Claude: {e}")
             return {"threat_score": 0.0, "analysis": f"Analysis error: {e}"}
-    
-    async def _call_claude(self, prompt: str) -> Optional[str]:
+
+    async def _call_claude(self, prompt: str) -> str | None:
         """
         Call the Claude API with a prompt.
-        
+
         Args:
             prompt: Prompt to send to Claude
-            
+
         Returns:
             Claude response or None if error
         """
@@ -102,30 +106,23 @@ class ClaudeAPI:
             request_data = {
                 "model": self.model,
                 "max_tokens": self.max_tokens,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
+                "messages": [{"role": "user", "content": prompt}],
             }
-            
+
             headers = {
                 "x-api-key": self.api_key,
                 "Content-Type": "application/json",
-                "anthropic-version": "2023-06-01"
+                "anthropic-version": "2023-06-01",
             }
-            
+
             response = await self.session.post(
-                f"{self.base_url}/v1/messages",
-                json=request_data,
-                headers=headers
+                f"{self.base_url}/v1/messages", json=request_data, headers=headers
             )
             response.raise_for_status()
-            
+
             result = response.json()
             return result.get("content", [{}])[0].get("text")
-            
+
         except httpx.TimeoutException:
             logger.error("Timeout calling Claude API")
             return None
@@ -135,14 +132,14 @@ class ClaudeAPI:
         except Exception as e:
             logger.error(f"Unexpected error calling Claude API: {e}")
             return None
-    
-    def _create_analysis_prompt(self, events: List[Dict[str, Any]]) -> str:
+
+    def _create_analysis_prompt(self, events: list[dict[str, Any]]) -> str:
         """
         Create a detailed prompt for Claude analysis.
-        
+
         Args:
             events: Events to analyze
-            
+
         Returns:
             Formatted prompt
         """
@@ -150,10 +147,10 @@ class ClaudeAPI:
         max_events = 100
         if len(events) > max_events:
             events = events[:max_events]
-        
+
         # Format events for analysis
         event_summary = self._summarize_events(events)
-        
+
         prompt = f"""
 You are an expert cybersecurity analyst with deep knowledge of attack patterns, threat intelligence, and MITRE ATT&CK framework. Analyze the following security events and provide a comprehensive threat assessment.
 
@@ -183,22 +180,22 @@ Focus on:
 5. Threat actor attribution if possible
 6. Campaign correlation and infrastructure analysis
 """
-        
+
         return prompt
-    
-    def _summarize_events(self, events: List[Dict[str, Any]]) -> str:
+
+    def _summarize_events(self, events: list[dict[str, Any]]) -> str:
         """
         Create a detailed summary of events for analysis.
-        
+
         Args:
             events: Events to summarize
-            
+
         Returns:
             Event summary string
         """
         if not events:
             return "No events"
-        
+
         # Extract comprehensive information
         source_ips = set()
         dest_ips = set()
@@ -207,7 +204,7 @@ Focus on:
         timestamps = []
         protocols = set()
         user_agents = set()
-        
+
         for event in events:
             if "source.ip" in event:
                 source_ips.add(event["source.ip"])
@@ -223,7 +220,7 @@ Focus on:
                 protocols.add(event["network.protocol"])
             if "user_agent.original" in event:
                 user_agents.add(event["user_agent.original"])
-        
+
         summary = f"""
 Total Events: {len(events)}
 Source IPs: {len(source_ips)} ({', '.join(list(source_ips)[:10])}{'...' if len(source_ips) > 10 else ''})
@@ -234,28 +231,28 @@ Protocols: {', '.join(list(protocols)[:10])}{'...' if len(protocols) > 10 else '
 User Agents: {len(user_agents)} unique
 Time Range: {min(timestamps) if timestamps else 'unknown'} to {max(timestamps) if timestamps else 'unknown'}
 """
-        
+
         return summary
-    
-    def _parse_analysis_response(self, response: str) -> Dict[str, Any]:
+
+    def _parse_analysis_response(self, response: str) -> dict[str, Any]:
         """
         Parse the Claude response into structured data.
-        
+
         Args:
             response: Raw Claude response
-            
+
         Returns:
             Parsed analysis data
         """
         try:
             # Try to extract JSON from the response
-            start_idx = response.find('{')
-            end_idx = response.rfind('}') + 1
-            
+            start_idx = response.find("{")
+            end_idx = response.rfind("}") + 1
+
             if start_idx != -1 and end_idx > start_idx:
                 json_str = response[start_idx:end_idx]
                 analysis = json.loads(json_str)
-                
+
                 # Validate and set defaults
                 analysis.setdefault("threat_score", 0.0)
                 analysis.setdefault("threat_level", "low")
@@ -268,7 +265,7 @@ Time Range: {min(timestamps) if timestamps else 'unknown'} to {max(timestamps) i
                 analysis.setdefault("threat_actor_attribution", "")
                 analysis.setdefault("campaign_indicators", [])
                 analysis.setdefault("infrastructure_analysis", "")
-                
+
                 return analysis
             else:
                 # Fallback if no JSON found
@@ -283,9 +280,9 @@ Time Range: {min(timestamps) if timestamps else 'unknown'} to {max(timestamps) i
                     "needs_deep_analysis": True,
                     "threat_actor_attribution": "",
                     "campaign_indicators": [],
-                    "infrastructure_analysis": ""
+                    "infrastructure_analysis": "",
                 }
-                
+
         except json.JSONDecodeError as e:
             logger.error(f"Error parsing Claude response as JSON: {e}")
             return {
@@ -299,29 +296,29 @@ Time Range: {min(timestamps) if timestamps else 'unknown'} to {max(timestamps) i
                 "needs_deep_analysis": True,
                 "threat_actor_attribution": "",
                 "campaign_indicators": [],
-                "infrastructure_analysis": ""
+                "infrastructure_analysis": "",
             }
 
 
 class OpenAIAPI:
     """
     OpenAI API integration for analysis and embeddings.
-    
+
     This class provides integration with OpenAI's API for analysis
     and embedding generation capabilities.
     """
-    
+
     def __init__(
         self,
         api_key: str,
         model: str = "gpt-4-turbo-preview",
         embedding_model: str = "text-embedding-3-large",
         base_url: str = "https://api.openai.com/v1",
-        max_tokens: int = 4096
+        max_tokens: int = 4096,
     ):
         """
         Initialize the OpenAI API client.
-        
+
         Args:
             api_key: OpenAI API key
             model: GPT model to use
@@ -332,129 +329,120 @@ class OpenAIAPI:
         self.api_key = api_key
         self.model = model
         self.embedding_model = embedding_model
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.max_tokens = max_tokens
         self.session = httpx.AsyncClient(timeout=120.0)
-        
+
         logger.info(f"OpenAIAPI initialized with model: {model}")
-    
+
     async def __aenter__(self):
         """Async context manager entry."""
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         await self.close()
-    
+
     async def close(self):
         """Close the HTTP session."""
         await self.session.aclose()
-    
-    async def analyze_events(self, events: List[Dict[str, Any]]) -> Dict[str, Any]:
+
+    async def analyze_events(self, events: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Analyze security events using OpenAI GPT.
-        
+
         Args:
             events: List of security events to analyze
-            
+
         Returns:
             Analysis results
         """
         if not events:
             return {"threat_score": 0.0, "analysis": "No events to analyze"}
-        
+
         # Prepare prompt for analysis
         prompt = self._create_analysis_prompt(events)
-        
+
         try:
             # Call OpenAI API
             response = await self._call_openai(prompt)
-            
+
             if response:
                 # Parse the response
                 analysis = self._parse_analysis_response(response)
                 return analysis
             else:
-                return {"threat_score": 0.0, "analysis": "Failed to get OpenAI response"}
-                
+                return {
+                    "threat_score": 0.0,
+                    "analysis": "Failed to get OpenAI response",
+                }
+
         except Exception as e:
             logger.error(f"Error analyzing events with OpenAI: {e}")
             return {"threat_score": 0.0, "analysis": f"Analysis error: {e}"}
-    
-    async def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
+
+    async def generate_embeddings(self, texts: list[str]) -> list[list[float]]:
         """
         Generate embeddings for texts using OpenAI.
-        
+
         Args:
             texts: List of texts to embed
-            
+
         Returns:
             List of embedding vectors
         """
         try:
-            request_data = {
-                "model": self.embedding_model,
-                "input": texts
-            }
-            
+            request_data = {"model": self.embedding_model, "input": texts}
+
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
-            
+
             response = await self.session.post(
-                f"{self.base_url}/embeddings",
-                json=request_data,
-                headers=headers
+                f"{self.base_url}/embeddings", json=request_data, headers=headers
             )
             response.raise_for_status()
-            
+
             result = response.json()
             embeddings = [item["embedding"] for item in result["data"]]
             return embeddings
-            
+
         except Exception as e:
             logger.error(f"Error generating embeddings: {e}")
             return []
-    
-    async def _call_openai(self, prompt: str) -> Optional[str]:
+
+    async def _call_openai(self, prompt: str) -> str | None:
         """
         Call the OpenAI API with a prompt.
-        
+
         Args:
             prompt: Prompt to send to OpenAI
-            
+
         Returns:
             OpenAI response or None if error
         """
         try:
             request_data = {
                 "model": self.model,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
+                "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": self.max_tokens,
-                "temperature": 0.7
+                "temperature": 0.7,
             }
-            
+
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             }
-            
+
             response = await self.session.post(
-                f"{self.base_url}/chat/completions",
-                json=request_data,
-                headers=headers
+                f"{self.base_url}/chat/completions", json=request_data, headers=headers
             )
             response.raise_for_status()
-            
+
             result = response.json()
             return result["choices"][0]["message"]["content"]
-            
+
         except httpx.TimeoutException:
             logger.error("Timeout calling OpenAI API")
             return None
@@ -464,14 +452,14 @@ class OpenAIAPI:
         except Exception as e:
             logger.error(f"Unexpected error calling OpenAI API: {e}")
             return None
-    
-    def _create_analysis_prompt(self, events: List[Dict[str, Any]]) -> str:
+
+    def _create_analysis_prompt(self, events: list[dict[str, Any]]) -> str:
         """
         Create a prompt for OpenAI analysis.
-        
+
         Args:
             events: Events to analyze
-            
+
         Returns:
             Formatted prompt
         """
@@ -479,10 +467,10 @@ class OpenAIAPI:
         max_events = 100
         if len(events) > max_events:
             events = events[:max_events]
-        
+
         # Format events for analysis
         event_summary = self._summarize_events(events)
-        
+
         prompt = f"""
 You are a cybersecurity analyst. Analyze the following security events and provide a threat assessment.
 
@@ -507,29 +495,29 @@ Focus on:
 3. Mapping to MITRE ATT&CK TTPs
 4. Providing actionable recommendations
 """
-        
+
         return prompt
-    
-    def _summarize_events(self, events: List[Dict[str, Any]]) -> str:
+
+    def _summarize_events(self, events: list[dict[str, Any]]) -> str:
         """
         Create a summary of events for analysis.
-        
+
         Args:
             events: Events to summarize
-            
+
         Returns:
             Event summary string
         """
         if not events:
             return "No events"
-        
+
         # Extract key information
         source_ips = set()
         dest_ips = set()
         dest_ports = set()
         actions = set()
         timestamps = []
-        
+
         for event in events:
             if "source.ip" in event:
                 source_ips.add(event["source.ip"])
@@ -541,7 +529,7 @@ Focus on:
                 actions.add(event["event.action"])
             if "@timestamp" in event:
                 timestamps.append(event["@timestamp"])
-        
+
         summary = f"""
 Total Events: {len(events)}
 Source IPs: {len(source_ips)} ({', '.join(list(source_ips)[:5])}{'...' if len(source_ips) > 5 else ''})
@@ -550,28 +538,28 @@ Destination Ports: {len(dest_ports)} ({', '.join(list(dest_ports)[:10])}{'...' i
 Actions: {', '.join(list(actions)[:10])}{'...' if len(actions) > 10 else ''}
 Time Range: {min(timestamps) if timestamps else 'unknown'} to {max(timestamps) if timestamps else 'unknown'}
 """
-        
+
         return summary
-    
-    def _parse_analysis_response(self, response: str) -> Dict[str, Any]:
+
+    def _parse_analysis_response(self, response: str) -> dict[str, Any]:
         """
         Parse the OpenAI response into structured data.
-        
+
         Args:
             response: Raw OpenAI response
-            
+
         Returns:
             Parsed analysis data
         """
         try:
             # Try to extract JSON from the response
-            start_idx = response.find('{')
-            end_idx = response.rfind('}') + 1
-            
+            start_idx = response.find("{")
+            end_idx = response.rfind("}") + 1
+
             if start_idx != -1 and end_idx > start_idx:
                 json_str = response[start_idx:end_idx]
                 analysis = json.loads(json_str)
-                
+
                 # Validate and set defaults
                 analysis.setdefault("threat_score", 0.0)
                 analysis.setdefault("threat_level", "low")
@@ -581,7 +569,7 @@ Time Range: {min(timestamps) if timestamps else 'unknown'} to {max(timestamps) i
                 analysis.setdefault("analysis", response)
                 analysis.setdefault("recommendations", [])
                 analysis.setdefault("needs_deep_analysis", False)
-                
+
                 return analysis
             else:
                 # Fallback if no JSON found
@@ -593,9 +581,9 @@ Time Range: {min(timestamps) if timestamps else 'unknown'} to {max(timestamps) i
                     "confidence": 0.3,
                     "analysis": response,
                     "recommendations": [],
-                    "needs_deep_analysis": True
+                    "needs_deep_analysis": True,
                 }
-                
+
         except json.JSONDecodeError as e:
             logger.error(f"Error parsing OpenAI response as JSON: {e}")
             return {
@@ -606,5 +594,5 @@ Time Range: {min(timestamps) if timestamps else 'unknown'} to {max(timestamps) i
                 "confidence": 0.3,
                 "analysis": response,
                 "recommendations": [],
-                "needs_deep_analysis": True
+                "needs_deep_analysis": True,
             }

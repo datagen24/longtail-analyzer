@@ -2,6 +2,27 @@
 
 This document provides comprehensive API documentation for the Long-Tail Analyzer project, a sophisticated security analysis system for detecting long-tail attack patterns and anomalies.
 
+## Recent Updates
+
+- **Import Structure**: All modules now use absolute imports with `src` prefix for better reliability
+- **UV Environment**: Project uses UV for fast dependency management and virtual environment
+- **Code Quality**: Full linting and formatting with Ruff and Black
+- **Type Safety**: Enhanced type annotations and static analysis with MyPy
+- **Documentation**: Auto-generated API docs with pdoc
+
+## Quick Start
+
+```python
+# Import the main orchestrator
+from src.orchestrator import LongTailAnalyzer
+
+# Initialize with configuration
+analyzer = LongTailAnalyzer("configs/default.yaml")
+
+# Run analysis
+results = await analyzer.analyze_period(start_date, end_date)
+```
+
 ## Table of Contents
 
 - [Core Orchestrator](#core-orchestrator)
@@ -684,7 +705,8 @@ from datetime import datetime, timedelta
 from src.orchestrator import LongTailAnalyzer
 
 async def main():
-    analyzer = LongTailAnalyzer()
+    # Initialize with configuration
+    analyzer = LongTailAnalyzer("configs/default.yaml")
     
     # Analyze last 24 hours
     end_date = datetime.now()
@@ -692,6 +714,9 @@ async def main():
     
     results = await analyzer.analyze_period(start_date, end_date)
     print(f"Analysis complete: {results}")
+    
+    # Close resources
+    await analyzer.close()
 
 asyncio.run(main())
 ```
@@ -701,8 +726,10 @@ asyncio.run(main())
 ```python
 from src.agents.profile_manager import ProfileManager
 
+# Initialize profile manager
+pm = ProfileManager("data/profiles.db")
+
 # Get high threat profiles
-pm = ProfileManager()
 threats = pm.get_high_threat_profiles(limit=10)
 
 for profile in threats:
@@ -711,6 +738,9 @@ for profile in threats:
     print(f"  Score: {profile.calculate_threat_score():.2f}")
     print(f"  Events: {profile.total_events}")
     print(f"  TTPs: {', '.join(profile.ttps)}")
+
+# Close database connection
+pm.close()
 ```
 
 ### Pattern Analysis
@@ -718,7 +748,10 @@ for profile in threats:
 ```python
 from src.agents.pattern_analyzer import PatternAnalyzer
 
+# Initialize pattern analyzer
 analyzer = PatternAnalyzer()
+
+# Analyze events (assuming events is a list of event dictionaries)
 patterns = await analyzer.analyze(events)
 
 for entity_id, analysis in patterns.items():
@@ -726,6 +759,34 @@ for entity_id, analysis in patterns.items():
     print(f"  Threat Score: {analysis['threat_score']:.2f}")
     print(f"  Patterns: {len(analysis['patterns'])}")
     print(f"  TTPs: {', '.join(analysis['ttps'])}")
+```
+
+### MCP Client Usage
+
+```python
+from src.utils.mcp_client import EnhancedMCPClient
+import asyncio
+
+async def main():
+    # Initialize MCP client
+    client = EnhancedMCPClient("http://localhost:3000")
+    
+    # Test connection
+    if await client.test_connection():
+        print("MCP server is healthy")
+        
+        # Query events with pagination
+        async for chunk in client.query_with_pagination(
+            time_range_hours=24,
+            page_size=500
+        ):
+            print(f"Retrieved {len(chunk)} events")
+            # Process chunk...
+    
+    # Close client
+    await client.close()
+
+asyncio.run(main())
 ```
 
 ## Error Handling

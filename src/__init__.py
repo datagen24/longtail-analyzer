@@ -1,8 +1,8 @@
 """
 Long-Tail Analysis Agent System
 
-A locally-deployed intelligent analysis system for DShield honeypot data that performs 
-long-tail security analysis, builds comprehensive attacker profiles, and manages 
+A locally-deployed intelligent analysis system for DShield honeypot data that performs
+long-tail security analysis, builds comprehensive attacker profiles, and manages
 large-scale temporal datasets through efficient context management and memory systems.
 """
 

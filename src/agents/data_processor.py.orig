@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Tuple, Optional, Any
 from collections import defaultdict, Counter
 
-from ..utils.mcp_client import EnhancedMCPClient
+from src.utils.mcp_client import EnhancedMCPClient
 
 logger = logging.getLogger(__name__)
 

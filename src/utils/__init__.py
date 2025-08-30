@@ -6,7 +6,7 @@ This module provides:
 - Configuration management
 """
 
-from .mcp_client import EnhancedMCPClient
-from .config import Config
+from src.utils.config import Config
+from src.utils.mcp_client import EnhancedMCPClient
 
 __all__ = ["EnhancedMCPClient", "Config"]
