@@ -6,12 +6,10 @@ external intelligence including web research, OSINT correlation, and
 threat actor attribution.
 """
 
-import asyncio
 import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import httpx
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +32,7 @@ class EnrichmentAgent:
         """
         self.config = config or {}
         self.session = httpx.AsyncClient(timeout=30.0)
-        self.cache = {}  # Simple in-memory cache
+        self.cache: Dict[str, Any] = {}  # Simple in-memory cache
         self.cache_ttl = timedelta(hours=24)
         
         logger.info("EnrichmentAgent initialized")

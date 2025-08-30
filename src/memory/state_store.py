@@ -168,7 +168,7 @@ class StateStore:
             
             if end_time:
                 updates.append("end_time = ?")
-                params.append(end_time)
+                params.append(end_time.isoformat())
             
             if metadata:
                 updates.append("metadata = ?")

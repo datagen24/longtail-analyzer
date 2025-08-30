@@ -5,7 +5,6 @@ This module provides integration with Ollama for local language model
 inference, enabling analysis without external API dependencies.
 """
 
-import asyncio
 import logging
 from typing import Dict, List, Optional, Any
 import httpx

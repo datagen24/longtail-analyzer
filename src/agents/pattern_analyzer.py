@@ -9,8 +9,8 @@ This module provides pattern analysis capabilities including:
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
+from datetime import datetime
+from typing import Dict, List, Optional, Any
 from collections import defaultdict, Counter
 import statistics
 
@@ -269,7 +269,7 @@ class PatternAnalyzer:
         
         return patterns
     
-    def _detect_anomalies(self, events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _detect_anomalies(self, events: List[Dict[str, Any]]) -> List[Pattern]:
         """
         Detect statistical anomalies in event patterns.
         
@@ -279,7 +279,7 @@ class PatternAnalyzer:
         Returns:
             List of detected anomalies
         """
-        anomalies = []
+        anomalies: List[Pattern] = []
         
         if len(events) < 5:
             return anomalies
@@ -304,12 +304,18 @@ class PatternAnalyzer:
             burst_events = [i for i, interval in enumerate(intervals) if interval < burst_threshold]
             
             if burst_events:
-                anomalies.append({
-                    "type": "burst_activity",
-                    "description": f"Detected {len(burst_events)} burst events",
-                    "severity": "medium",
-                    "confidence": 0.8
-                })
+                pattern = Pattern(
+                    pattern_id=f"burst_{events[0].get('source.ip', 'unknown')}_{timestamps[0].strftime('%Y%m%d_%H%M%S')}",
+                    pattern_type=PatternType.UNKNOWN,
+                    name="Burst Activity",
+                    description=f"Detected {len(burst_events)} burst events",
+                    severity=PatternSeverity.MEDIUM,
+                    confidence_score=0.8,
+                    first_detected=timestamps[0],
+                    last_detected=timestamps[-1]
+                )
+                pattern.add_source_entity(events[0].get("source.ip", "unknown"))
+                anomalies.append(pattern)
         
         # Analyze port distribution anomalies
         ports = [e.get("destination.port") for e in events if "destination.port" in e]
@@ -319,12 +325,18 @@ class PatternAnalyzer:
             
             # If one port dominates significantly
             if most_common_port[1] > len(ports) * 0.8:
-                anomalies.append({
-                    "type": "port_concentration",
-                    "description": f"Port {most_common_port[0]} used in {most_common_port[1]} of {len(ports)} events",
-                    "severity": "low",
-                    "confidence": 0.6
-                })
+                pattern = Pattern(
+                    pattern_id=f"port_conc_{events[0].get('source.ip', 'unknown')}_{timestamps[0].strftime('%Y%m%d_%H%M%S')}",
+                    pattern_type=PatternType.SCANNING,
+                    name="Port Concentration",
+                    description=f"Port {most_common_port[0]} used in {most_common_port[1]} of {len(ports)} events",
+                    severity=PatternSeverity.LOW,
+                    confidence_score=0.6,
+                    first_detected=timestamps[0],
+                    last_detected=timestamps[-1]
+                )
+                pattern.add_source_entity(events[0].get("source.ip", "unknown"))
+                anomalies.append(pattern)
         
         return anomalies
     

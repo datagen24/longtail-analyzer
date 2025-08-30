@@ -9,7 +9,7 @@ import os
 import yaml
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
@@ -190,31 +190,37 @@ class ConfigManager:
         Returns:
             Configuration dictionary from environment variables
         """
-        env_config = {}
+        env_config: Dict[str, Any] = {}
         
         # MCP configuration
         if os.getenv("MCP_URL"):
             env_config.setdefault("mcp", {})["url"] = os.getenv("MCP_URL")
-        if os.getenv("MCP_TIMEOUT"):
-            env_config.setdefault("mcp", {})["timeout"] = float(os.getenv("MCP_TIMEOUT"))
+        mcp_timeout = os.getenv("MCP_TIMEOUT")
+        if mcp_timeout:
+            env_config.setdefault("mcp", {})["timeout"] = float(mcp_timeout)
         
         # Database configuration
         if os.getenv("DB_PATH"):
             env_config.setdefault("database", {})["db_path"] = os.getenv("DB_PATH")
         if os.getenv("VECTOR_DB_PATH"):
             env_config.setdefault("database", {})["vector_db_path"] = os.getenv("VECTOR_DB_PATH")
-        if os.getenv("CACHE_TTL_HOURS"):
-            env_config.setdefault("database", {})["cache_ttl_hours"] = int(os.getenv("CACHE_TTL_HOURS"))
+        cache_ttl = os.getenv("CACHE_TTL_HOURS")
+        if cache_ttl:
+            env_config.setdefault("database", {})["cache_ttl_hours"] = int(cache_ttl)
         
         # Analysis configuration
-        if os.getenv("WINDOW_HOURS"):
-            env_config.setdefault("analysis", {})["window_hours"] = int(os.getenv("WINDOW_HOURS"))
-        if os.getenv("OVERLAP_HOURS"):
-            env_config.setdefault("analysis", {})["overlap_hours"] = int(os.getenv("OVERLAP_HOURS"))
-        if os.getenv("MAX_ENTITIES_PER_WINDOW"):
-            env_config.setdefault("analysis", {})["max_entities_per_window"] = int(os.getenv("MAX_ENTITIES_PER_WINDOW"))
-        if os.getenv("ANOMALY_THRESHOLD"):
-            env_config.setdefault("analysis", {})["anomaly_threshold"] = float(os.getenv("ANOMALY_THRESHOLD"))
+        window_hours = os.getenv("WINDOW_HOURS")
+        if window_hours:
+            env_config.setdefault("analysis", {})["window_hours"] = int(window_hours)
+        overlap_hours = os.getenv("OVERLAP_HOURS")
+        if overlap_hours:
+            env_config.setdefault("analysis", {})["overlap_hours"] = int(overlap_hours)
+        max_entities = os.getenv("MAX_ENTITIES_PER_WINDOW")
+        if max_entities:
+            env_config.setdefault("analysis", {})["max_entities_per_window"] = int(max_entities)
+        anomaly_threshold = os.getenv("ANOMALY_THRESHOLD")
+        if anomaly_threshold:
+            env_config.setdefault("analysis", {})["anomaly_threshold"] = float(anomaly_threshold)
         
         # Local LLM configuration
         if os.getenv("OLLAMA_MODEL"):
@@ -231,10 +237,12 @@ class ConfigManager:
             env_config.setdefault("api_llm", {})["use_api"] = True
         
         # Enrichment configuration
-        if os.getenv("ENABLE_WEB_RESEARCH"):
-            env_config.setdefault("enrichment", {})["enable_web_research"] = os.getenv("ENABLE_WEB_RESEARCH").lower() == "true"
-        if os.getenv("ENABLE_THREAT_INTELLIGENCE"):
-            env_config.setdefault("enrichment", {})["enable_threat_intelligence"] = os.getenv("ENABLE_THREAT_INTELLIGENCE").lower() == "true"
+        enable_web_research = os.getenv("ENABLE_WEB_RESEARCH")
+        if enable_web_research:
+            env_config.setdefault("enrichment", {})["enable_web_research"] = enable_web_research.lower() == "true"
+        enable_threat_intel = os.getenv("ENABLE_THREAT_INTELLIGENCE")
+        if enable_threat_intel:
+            env_config.setdefault("enrichment", {})["enable_threat_intelligence"] = enable_threat_intel.lower() == "true"
         
         # Logging configuration
         if os.getenv("LOG_LEVEL"):
@@ -243,10 +251,12 @@ class ConfigManager:
             env_config.setdefault("logging", {})["file"] = os.getenv("LOG_FILE")
         
         # Performance configuration
-        if os.getenv("MAX_CONCURRENT_REQUESTS"):
-            env_config.setdefault("performance", {})["max_concurrent_requests"] = int(os.getenv("MAX_CONCURRENT_REQUESTS"))
-        if os.getenv("REQUEST_TIMEOUT_SECONDS"):
-            env_config.setdefault("performance", {})["request_timeout_seconds"] = int(os.getenv("REQUEST_TIMEOUT_SECONDS"))
+        max_concurrent = os.getenv("MAX_CONCURRENT_REQUESTS")
+        if max_concurrent:
+            env_config.setdefault("performance", {})["max_concurrent_requests"] = int(max_concurrent)
+        request_timeout = os.getenv("REQUEST_TIMEOUT_SECONDS")
+        if request_timeout:
+            env_config.setdefault("performance", {})["request_timeout_seconds"] = int(request_timeout)
         
         if env_config:
             logger.info("Loaded configuration from environment variables")

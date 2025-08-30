@@ -9,9 +9,9 @@ enrichment to perform comprehensive long-tail security analysis.
 import asyncio
 import logging
 import yaml
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, Union
 
 from .utils.mcp_client import EnhancedMCPClient
 from .agents.data_processor import TimeWindowProcessor
@@ -58,6 +58,7 @@ class LongTailAnalyzer:
         
         self.time_processor = TimeWindowProcessor(
             mcp_client=self.mcp_client,
+            profile_manager=self.profile_manager,
             window_hours=self.config.get("window_hours", 6),
             overlap_hours=self.config.get("overlap_hours", 1),
             max_entities_per_window=self.config.get("max_entities_per_window", 50)
@@ -67,8 +68,8 @@ class LongTailAnalyzer:
         self.enrichment_agent = EnrichmentAgent(self.config.get("enrichment", {}))
         
         # Initialize LLMs
-        self.local_llm = None
-        self.api_llm = None
+        self.local_llm: Optional[OllamaLLM] = None
+        self.api_llm: Optional[Union[ClaudeAPI, OpenAIAPI]] = None
         self._initialize_llms()
         
         # Load analysis state
@@ -208,14 +209,12 @@ class LongTailAnalyzer:
             "processing_start": datetime.now().isoformat()
         }
         
-        for i, (window_start, window_end) in enumerate(windows):
-            logger.info(f"Processing window {i+1}/{len(windows)}: {window_start} to {window_end}")
+        for i, window in enumerate(windows):
+            logger.info(f"Processing window {i+1}/{len(windows)}: {window.start_time} to {window.end_time}")
             
             try:
                 result = await self.time_processor.process_window(
-                    window_start,
-                    window_end,
-                    self.profile_manager,
+                    window,
                     self.pattern_analyzer
                 )
                 
@@ -230,13 +229,13 @@ class LongTailAnalyzer:
                     results["error_windows"] += 1
                 
                 # Save checkpoint
-                self._save_checkpoint(window_end, result)
+                self._save_checkpoint(window.end_time, result)
                 
                 # Adaptive delay based on data volume
                 await asyncio.sleep(1)
                 
             except Exception as e:
-                logger.error(f"Error processing window: {e}")
+                logger.error(f"Error processing window {window.start_time} to {window.end_time}: {e}")
                 results["error_windows"] += 1
                 continue
         

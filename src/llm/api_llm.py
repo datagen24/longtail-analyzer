@@ -5,7 +5,6 @@ This module provides integration with external LLM APIs including
 Claude and OpenAI for advanced analysis capabilities.
 """
 
-import asyncio
 import logging
 from typing import Dict, List, Optional, Any
 import httpx

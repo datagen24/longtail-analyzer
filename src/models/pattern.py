@@ -6,8 +6,8 @@ identified attack patterns with metadata and confidence scores.
 """
 
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
-from typing import Dict, List, Optional, Any
+from datetime import datetime, timedelta
+from typing import Dict, List, Any
 from enum import Enum
 
 

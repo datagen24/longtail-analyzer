@@ -7,9 +7,8 @@ confidence scores, and metadata.
 """
 
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
-import json
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any
 import numpy as np
 
 
